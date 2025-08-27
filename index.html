@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Snakes</title>
+    <style>
+        html,
+        body {
+            margin: 50;
+            padding: 50;
+            height: 100%;
+            overflow: hidden;
+        }
+
+        canvas {
+            border: 10px solid red;
+            display: block;
+        }
+    </style>
+</head>
+
+<body>
+    <canvas id="gameScreen"></canvas>
+    <script>
+        const canvas = document.getElementById('gameScreen');
+        const bodyMargin = 50;
+        const bodyPadding = 50;
+        const canvasBorder = 10;
+        const totalOffset = (bodyMargin + bodyPadding + canvasBorder) * 2;
+        canvas.width = window.innerWidth - totalOffset;
+        canvas.height = window.innerHeight - totalOffset;
+        const screen = canvas.getContext('2d');
+        const slitherSpeed = 0.05;
+        const foodAddSpeed = 3;
+        const foodRemoveSpeed = 15;
+
+
+        let snakeObj = [{ x: 100, y: 100 }, { x: 110, y: 100 }];
+
+        let slitherDirection = { x: 10, y: 0 }; //Starting at Right direction
+
+        let foodObj = [];
+
+        let foodSize = 15;
+
+        let snakeSize = 11;
+
+        let foodColor = 'green';
+
+        let snakeColor = 'black';
+
+        function drawSnake() {
+            screen.fillStyle = snakeColor;
+            snakeObj.forEach((snakeBody, index) => {
+                screen.fillRect(snakeBody.x, snakeBody.y, snakeSize, snakeSize);
+                // Check if it's the last element (head of snake)
+                if (index === snakeObj.length - 1) {
+                    screen.fillStyle = 'red';
+                    screen.fillRect(snakeBody.x, snakeBody.y, snakeSize * 1.7, snakeSize * 1.7);
+                }
+            });
+
+
+            snakeObj.push({
+                x: snakeObj[snakeObj.length - 1].x + slitherDirection.x,
+                y: snakeObj[snakeObj.length - 1].y + slitherDirection.y
+            });
+            snakeObj.shift();
+        }
+
+        function checkOutside() {
+            const snakeHeadPos = snakeObj[snakeObj.length - 1];
+            if (snakeHeadPos.x > canvas.width || snakeHeadPos.y > canvas.height || snakeHeadPos.y < -1 || snakeHeadPos.x < -1) {
+                {
+                    alert("Game Over: Snake went outside the screen!");
+                    snakeObj = [{ x: 100, y: 100 }, { x: 110, y: 100 }];
+                }
+            }
+        }
+
+
+        document.addEventListener('keydown', function (event) {
+            switch (event.key) {
+                case 'ArrowUp':
+                    slitherDirection = { x: 0, y: -10 };
+                    break;
+                case 'ArrowDown':
+                    slitherDirection = { x: 0, y: 10 };
+                    break;
+                case 'ArrowLeft':
+                    slitherDirection = { x: -10, y: 0 };
+                    break;
+                case 'ArrowRight':
+                    slitherDirection = { x: 10, y: 0 };
+                    break;
+                default:
+                    // Optional: handle other keys or ignore
+                    break;
+            }
+        });
+
+
+
+        function addFood() {
+            const generateFoodPos = {
+                x: Math.floor(Math.random() * canvas.width),
+                y: Math.floor(Math.random() * canvas.height)
+            };
+            foodObj.push(generateFoodPos)
+        }
+
+        function removeFood() {
+            foodObj.forEach(food => {
+                foodObj.shift();
+            });
+        }
+
+        function checkFoodEat() {
+            const snakeHeadPos = snakeObj[snakeObj.length - 1];
+            const eatRadius = 10; // distance threshold for "eating"
+
+            // Find food within range
+            const eatenFood = foodObj.find(fpos => {
+                const dx = fpos.x - snakeHeadPos.x;
+                const dy = fpos.y - snakeHeadPos.y;
+                const distance = Math.sqrt(dx * dx + dy * dy);
+                return distance < eatRadius;
+            });
+
+            if (eatenFood) {
+                // Add new head (grow snake)
+                const newHead = {
+                    x: snakeHeadPos.x + slitherDirection.x,
+                    y: snakeHeadPos.y + slitherDirection.y
+                };
+                snakeObj.push(newHead);
+
+                // Remove the eaten food
+                foodObj = foodObj.filter(fpos => !(fpos.x === eatenFood.x && fpos.y === eatenFood.y));
+            }
+
+            // Draw remaining food
+            foodObj.forEach(fpos => {
+                screen.fillStyle = foodColor;
+                screen.fillRect(fpos.x, fpos.y, foodSize, foodSize);
+            });
+        }
+
+
+        function clrscr() {
+            screen.clearRect(0, 0, canvas.width, canvas.height);
+        }
+
+        addFood();
+        setInterval(() => { removeFood() }, foodRemoveSpeed * 1000);
+        setInterval(() => { addFood() }, foodAddSpeed * 1000);
+
+        setInterval(() => {
+            clrscr();
+            drawSnake();
+            checkOutside();
+            checkFoodEat();
+        }, slitherSpeed * 1000);
+
+
+    </script>
+</body>
+
+</html>
